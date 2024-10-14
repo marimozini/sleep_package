@@ -25,12 +25,12 @@ def read_csv_from_subdirs(folder_path, sleep_sum_path):
 
                     elif 'wear_detection' in filename:
                         df_wear_detection = pd.read_csv(csv_file_path)
-                        print(f"Lendo arquivo activity: {csv_file_path}")
+                        print(f"Lendo arquivo wear_detection: {csv_file_path}")
                         #print(df_wear_detection.head())  # Visualiza as primeiras linhas
 
                     elif 'ck_predictions' in filename:
                         df_ck_predictions = pd.read_csv(csv_file_path)
-                        print(f"Lendo arquivo activity: {csv_file_path}")
+                        print(f"Lendo arquivo ck_predictions: {csv_file_path}")
                         #print(df_ck_predictions.head())  # Visualiza as primeiras linhas
 
             # chamar a funcao para formatar aqui
@@ -41,12 +41,12 @@ def read_csv_from_subdirs(folder_path, sleep_sum_path):
             patient_id_csv[0]
             
             df_final = merge_data(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
-            df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
+            #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
 
             print(f"\n\nTabela: {patient_id_csv[0]}")
             print(df_final.head()) # gerar um csv
         break  # Interrompe após o primeiro nível de diretórios
-    return
+    return df_final
 
 
 
@@ -87,13 +87,15 @@ def merge_data (sleep_sum_path, patient_id_csv, df_raw, df_activity_index):
     sleep_sum_cut = sleep_sum[['ID', 'calendar_date', 'sleeponset_ts', 'wakeup_ts']]
     sleep_sum_cut.calendar_date = pd.to_datetime(sleep_sum_cut.calendar_date)
 
-    patient_sleep_sum = sleep_sum_cut[sleep_sum_cut['ID'] == patient_id_csv[0]]
+    patient_sleep_sum = sleep_sum_cut[sleep_sum_cut['ID'] == patient_id_csv]
+    print(patient_sleep_sum)
 
     for _, row in patient_sleep_sum.iterrows():
         calendar_date = row['calendar_date']
         sleeponset_ts = row['sleeponset_ts']
         wakeup_ts = row['wakeup_ts']
         
+        print(patient_sleep_sum)
         # Filtrando a segunda tabela pela data correspondente
         mask = df_raw['Date'] == calendar_date
         date_filtered_df = df_raw[mask]
@@ -115,3 +117,99 @@ def merge_data (sleep_sum_path, patient_id_csv, df_raw, df_activity_index):
 
 # Chama a função
 #read_csv_from_subdirs(folder_path, sleep_sum_path)
+
+################# testes
+
+def read_csv_from_subdirs_teste(folder_path, sleep_sum_path):
+    for dirpath, dirnames, filenames in os.walk(folder_path):
+        for subdir in dirnames:
+            subdir_path = os.path.join(dirpath, subdir)
+            # Lista os arquivos dentro do subdiretório
+            for filename in os.listdir(subdir_path):
+                if filename.endswith('.csv'):
+                    csv_file_path = os.path.join(subdir_path, filename)
+                    
+                    # Condicional para arquivos raw_data
+                    if 'raw_data' in filename:
+                        df_raw = pd.read_csv(csv_file_path, nrows=1000)
+                        print(f"Lendo arquivo raw_data: {csv_file_path}")
+                        #print(df_raw.head())  # Visualiza as primeiras linhas
+                        
+                    # Condicional para arquivos activity
+                    elif 'activity_index' in filename:
+                        df_activity_index = pd.read_csv(csv_file_path, nrows=1000)
+                        print(f"Lendo arquivo activity: {csv_file_path}")
+                        #print(df_activity_index.head())  # Visualiza as primeiras linhas
+
+                    elif 'wear_detection' in filename:
+                        df_wear_detection = pd.read_csv(csv_file_path, nrows=1000)
+                        print(f"Lendo arquivo wear_detection: {csv_file_path}")
+                        #print(df_wear_detection.head())  # Visualiza as primeiras linhas
+
+                    elif 'ck_predictions' in filename:
+                        df_ck_predictions = pd.read_csv(csv_file_path, nrows=1000)
+                        print(f"Lendo arquivo ck_predictions: {csv_file_path}")
+                        #print(df_ck_predictions.head())  # Visualiza as primeiras linhas
+
+            # chamar a funcao para formatar aqui
+            df_raw, df_activity_index, df_wear_detection, df_ck_predictions = df_format(df_raw, df_activity_index, df_wear_detection, df_ck_predictions)
+
+            a = os.path.splitext(os.path.basename(csv_file_path))
+            patient_id_csv = a[0].split('_')
+            patient_id_csv[0]
+            
+            merge_data_teste(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
+            #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
+
+            #print(f"\n\nTabela: {patient_id_csv[0]}")
+            #print(df_final.head()) # gerar um csv
+        break  # Interrompe após o primeiro nível de diretórios
+    return
+
+def merge_data_teste (sleep_sum_path, patient_id_csv, df_raw, df_activity_index):
+    # Reading sleep sum file
+    sleep_sum = pd.read_csv(sleep_sum_path)
+    sleep_sum_cut = sleep_sum[['ID', 'calendar_date', 'sleeponset_ts', 'wakeup_ts']]
+    sleep_sum_cut.calendar_date = pd.to_datetime(sleep_sum_cut.calendar_date).dt.date
+
+    patient_sleep_sum = sleep_sum_cut[sleep_sum_cut['ID'] == patient_id_csv]
+    
+    for _, row in patient_sleep_sum.iterrows():
+        calendar_date = row['calendar_date']
+        sleeponset_ts = row['sleeponset_ts']
+        wakeup_ts = row['wakeup_ts']
+        print(calendar_date)
+
+        # Filtrando a segunda tabela pela data correspondente
+        mask = df_raw['Date'] == calendar_date
+        date_filtered_df = df_raw[mask]
+
+        # Encontrar o indice 
+        sleeponset_idx = date_filtered_df[date_filtered_df['Time'] == sleeponset_ts].index
+        wakeup_idx = date_filtered_df[date_filtered_df['Time'] == wakeup_ts].index
+
+        print("Sleep id: ", sleeponset_idx)
+        print("Wake id: ",wakeup_idx)
+
+        if not sleeponset_idx.empty and not wakeup_idx.empty:
+            df_raw.loc[sleeponset_idx[0]:wakeup_idx[0], 'Sleep'] = 1
+
+        print("\nTipo de sleeponset_ts:")
+        print(type(sleeponset_ts))
+
+        # Verificar o tipo de wakeup_ts
+        print("\nTipo de wakeup_ts:")
+        print(type(wakeup_ts))
+
+
+    merged_df = pd.merge(df_raw, df_activity_index, how='left', on=['Date', 'Time'])
+
+    # Propagar os valores de activity_index
+    merged_df['activity_index'] = merged_df['activity_index'].fillna(method='ffill')
+    
+    return merged_df
+
+
+folder_path = "C:/Users/marim/Documents/Faculdade/TCC/patient_act_data_CSV"
+sleep_sum_path = 'C:/Users/marim/Documents/Faculdade/TCC/HEATMAP/sleep_sum_TOTAL.csv'
+read_csv_from_subdirs_teste(folder_path, sleep_sum_path)
