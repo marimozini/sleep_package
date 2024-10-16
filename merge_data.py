@@ -40,7 +40,7 @@ def read_csv_from_subdirs(folder_path, sleep_sum_path):
             patient_id_csv = a[0].split('_')
             patient_id_csv[0]
             
-            df_final = merge_data(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
+            df_final = merge_data_teste(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
             #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
 
             print(f"\n\nTabela: {patient_id_csv[0]}")
@@ -158,7 +158,8 @@ def read_csv_from_subdirs_teste(folder_path, sleep_sum_path):
             patient_id_csv = a[0].split('_')
             patient_id_csv[0]
             
-            merge_data_teste(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
+            #merge_data_teste(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
+            teste_final(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
             #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
 
             #print(f"\n\nTabela: {patient_id_csv[0]}")
@@ -167,49 +168,92 @@ def read_csv_from_subdirs_teste(folder_path, sleep_sum_path):
     return
 
 def merge_data_teste (sleep_sum_path, patient_id_csv, df_raw, df_activity_index):
+    count = 0
     # Reading sleep sum file
     sleep_sum = pd.read_csv(sleep_sum_path)
     sleep_sum_cut = sleep_sum[['ID', 'calendar_date', 'sleeponset_ts', 'wakeup_ts']]
     sleep_sum_cut.calendar_date = pd.to_datetime(sleep_sum_cut.calendar_date).dt.date
-
+    sleep_sum_cut.sleeponset_ts = pd.to_datetime(sleep_sum_cut.sleeponset_ts).dt.time
+    sleep_sum_cut.wakeup_ts = pd.to_datetime(sleep_sum_cut.wakeup_ts).dt.time
+    
+    #print(sleep_sum_cut.dtypes)
+    #print(sleep_sum_cut.head())
+    print(sleep_sum_cut.dtypes)
     patient_sleep_sum = sleep_sum_cut[sleep_sum_cut['ID'] == patient_id_csv]
+    patient_sleep_sum.sort_values(by=['calendar_date'], inplace=True)
+
+    # patient_sleep_sum.calendar_date = patient_sleep_sum.calendar_date.dt.date
+    # patient_sleep_sum.sleeponset_ts = patient_sleep_sum.sleeponset_ts.dt.time
+    # patient_sleep_sum.wakeup_ts = patient_sleep_sum.wakeup_ts.dt.time
+
+    print(patient_sleep_sum.head())
+    print(patient_sleep_sum.dtypes)
     
     for _, row in patient_sleep_sum.iterrows():
         calendar_date = row['calendar_date']
         sleeponset_ts = row['sleeponset_ts']
         wakeup_ts = row['wakeup_ts']
-        print(calendar_date)
 
         # Filtrando a segunda tabela pela data correspondente
         mask = df_raw['Date'] == calendar_date
         date_filtered_df = df_raw[mask]
 
+        date_filtered_df['Time'] = pd.to_datetime(date_filtered_df['Time']).dt.time
+
+        #print(date_filtered_df.head())
+
         # Encontrar o indice 
         sleeponset_idx = date_filtered_df[date_filtered_df['Time'] == sleeponset_ts].index
         wakeup_idx = date_filtered_df[date_filtered_df['Time'] == wakeup_ts].index
 
-        print("Sleep id: ", sleeponset_idx)
-        print("Wake id: ",wakeup_idx)
-
         if not sleeponset_idx.empty and not wakeup_idx.empty:
+            print('Recebeu valor')
+            count = count + 1
             df_raw.loc[sleeponset_idx[0]:wakeup_idx[0], 'Sleep'] = 1
 
-        print("\nTipo de sleeponset_ts:")
-        print(type(sleeponset_ts))
+        # print(date_filtered_df['Time'].dtype)  # object
 
-        # Verificar o tipo de wakeup_ts
-        print("\nTipo de wakeup_ts:")
-        print(type(wakeup_ts))
+        # # Exibir o valor de sleeponset_ts e wakeup_ts
+        # print("\Tipo de sleeponset_ts:") # string
+        # print(type(sleeponset_ts))
+        # print("\Tipo de wakeup_ts:")
+        # print(type(wakeup_ts))
+        # print('Tipo calendar date: ', type(calendar_date))
 
 
     merged_df = pd.merge(df_raw, df_activity_index, how='left', on=['Date', 'Time'])
 
     # Propagar os valores de activity_index
     merged_df['activity_index'] = merged_df['activity_index'].fillna(method='ffill')
+
+    print('Count: ', count)
     
     return merged_df
 
 
-folder_path = "C:/Users/marim/Documents/Faculdade/TCC/patient_act_data_CSV"
-sleep_sum_path = 'C:/Users/marim/Documents/Faculdade/TCC/HEATMAP/sleep_sum_TOTAL.csv'
-read_csv_from_subdirs_teste(folder_path, sleep_sum_path)
+
+
+def teste_final (sleep_sum_path, patient_id_csv, df_raw, df_activity_index):
+    sleep_sum = pd.read_csv(sleep_sum_path)
+    sleep_sum_cut = sleep_sum[['ID', 'calendar_date', 'sleeponset_ts', 'wakeup_ts']]
+    
+    patient_sleep_sum = sleep_sum_cut[sleep_sum_cut['ID'] == patient_id_csv]
+    print(patient_sleep_sum.head())
+    print(patient_sleep_sum.dtypes)
+
+    patient_sleep_sum.calendar_date = pd.to_datetime(patient_sleep_sum.calendar_date).dt.date
+    patient_sleep_sum.sleeponset_ts = pd.to_datetime(patient_sleep_sum.sleeponset_ts).dt.time
+    patient_sleep_sum.wakeup_ts = pd.to_datetime(patient_sleep_sum.wakeup_ts).dt.time
+
+    print(patient_sleep_sum.head())
+    print(patient_sleep_sum.dtypes)
+    
+    return 
+
+
+
+
+
+# folder_path = "C:/Users/marim/Documents/Faculdade/TCC/patient_act_data_CSV"
+# sleep_sum_path = 'C:/Users/marim/Documents/Faculdade/TCC/HEATMAP/sleep_sum_TOTAL.csv'
+# read_csv_from_subdirs_teste(folder_path, sleep_sum_path)
