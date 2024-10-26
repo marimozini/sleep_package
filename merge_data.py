@@ -41,12 +41,12 @@ def read_csv_from_subdirs(folder_path, sleep_sum_path):
             patient_id_csv[0]
             
             df_final = merge_data(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
-            #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
+            df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
 
-            print(f"\n\nTabela: {patient_id_csv[0]}")
-            print(df_final.head()) # gerar um csv
+            # print(f"\n\nTabela: {patient_id_csv[0]}")
+            # print(df_final.head()) # gerar um csv
         break  # Interrompe após o primeiro nível de diretórios
-    return df_final
+    return 
 
 
 
@@ -154,18 +154,20 @@ def read_csv_from_subdirs_teste(folder_path, sleep_sum_path):
                         #print(df_ck_predictions.head())  # Visualiza as primeiras linhas
 
             # chamar a funcao para formatar aqui
+            print(df_raw.head())
             df_raw, df_activity_index, df_wear_detection, df_ck_predictions = df_format(df_raw, df_activity_index, df_wear_detection, df_ck_predictions)
 
             a = os.path.splitext(os.path.basename(csv_file_path))
             patient_id_csv = a[0].split('_')
             patient_id_csv[0]
             
-            merge_data_teste(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
+            df_final = merge_data(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
             #teste_final(sleep_sum_path, patient_id_csv[0], df_raw, df_activity_index)
             #df_final.to_csv(folder_path + f"/{patient_id_csv[0]}_data_final.csv", index=False)
 
             #print(f"\n\nTabela: {patient_id_csv[0]}")
-            #print(df_final.head()) # gerar um csv
+            print(df_final.head()) # gerar um csv
         break  # Interrompe após o primeiro nível de diretórios
     return
+
 
