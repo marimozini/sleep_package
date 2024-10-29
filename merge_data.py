@@ -170,4 +170,6 @@ def read_csv_from_subdirs_teste(folder_path, sleep_sum_path):
         break  # Interrompe após o primeiro nível de diretórios
     return
 
-
+# folder_path = "C:/Users/marim/Documents/Faculdade/TCC/patient_act_data_CSV"
+# sleep_sum_path = 'C:/Users/marim/Documents/Faculdade/TCC/sleepandsummary_total_long_pos_meia_noite.csv'
+# read_csv_from_subdirs(folder_path, sleep_sum_path)
